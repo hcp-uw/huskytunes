@@ -1,0 +1,17 @@
+.home-page {
+  text-align: center;
+
+}
+
+.hello-world-picture {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.message {
+  font-size: 1.5em;
+  max-width: 50%;
+  text-align: center;
+  margin: 20px auto;
+}
