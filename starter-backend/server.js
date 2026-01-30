@@ -19,9 +19,7 @@ const images = [];
 // test endpoint
 app.get('/message/hello', (req, res) => {
     res.send(
-        `Attention HCP Project Team! If you see this, your front end and
-        back end are connected. Don't believe me? Upload and image and
-        see for yourself!`
+        `Husky Tunes is the best app ever!`
     )
 })
 
