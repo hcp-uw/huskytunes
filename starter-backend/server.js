@@ -1,6 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 const { unknownEndpoint } = require('./middleware');
+const { connect, client} = require('./db');  // database connection
 
 // create your express application
 const app = express();
@@ -9,8 +10,21 @@ const app = express();
 app.use(express.json());
 
 // enable cors
-app.use(cors());
-
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+  }));
+  // session middleware - stores sessions in MongoDB
+app.use(session({
+secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+resave: false,
+saveUninitialized: false,
+store: MongoStore.create({ client }),
+cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 7  // 1 week
+}
+}));
 // our 'database'. This is just a simple in-memory store for the images, and
 // will be lost when the server is restarted. In a real application, you would
 // use a database to store the images.
@@ -43,6 +57,13 @@ app.use(unknownEndpoint);
 const PORT = 3001;
 
 // start your server
-app.listen(PORT, () => {
-    console.log(`Server running on port test ${PORT}`);
-});
+connect()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+  });
