@@ -3,22 +3,41 @@ const { ObjectId } = require('mongodb');
 
 const collectionName = 'albums';
 
-// Seed a sample album if none exist
+// Seed sample albums if none exist
 async function seedSampleAlbum() {
   const db = getDb();
   const albums = db.collection(collectionName);
 
   const count = await albums.countDocuments();
   if (count === 0) {
-    await albums.insertOne({
-      title: 'Abbey Road',
-      artist: 'The Beatles',
-      year: 1969,
-      cover: 'https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg',
-      genre: 'Rock',
-      createdAt: new Date()
-    });
-    console.log('Seeded sample album: Abbey Road');
+    const now = new Date();
+    await albums.insertMany([
+      {
+        title: 'The Glow Pt. 2',
+        artist: 'The Microphones',
+        year: 2001,
+        cover: 'https://upload.wikimedia.org/wikipedia/en/7/7e/Microphones_-_The_Glow_Pt._2_%282001_album%29_cover_art.jpg',
+        genre: 'Indie Rock',
+        createdAt: now
+      },
+      {
+        title: 'In the Aeroplane Over the Sea',
+        artist: 'Neutral Milk Hotel',
+        year: 1998,
+        cover: 'https://upload.wikimedia.org/wikipedia/en/5/5f/In_the_aeroplane_over_the_sea_album_cover_copy.jpg',
+        genre: 'Indie Folk',
+        createdAt: now
+      },
+      {
+        title: 'Kid A',
+        artist: 'Radiohead',
+        year: 2000,
+        cover: 'https://upload.wikimedia.org/wikipedia/en/0/02/Radiohead.kida.albumart.jpg',
+        genre: 'Experimental Rock',
+        createdAt: now
+      }
+    ]);
+    console.log('Seeded sample albums: The Glow Pt. 2 and others');
   }
 }
 

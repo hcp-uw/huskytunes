@@ -3,31 +3,30 @@ import PropTypes from 'prop-types';
 import { getAlbums, rateAlbum } from '../../services/album';
 import './AlbumRating.css';
 
-const StarRating = ({ rating, onRate, interactive }) => {
-  const [hovered, setHovered] = useState(0);
+const ScoreButtons = ({ value, onChange, disabled }) => {
+  const scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   return (
-    <div className="star-rating" onMouseLeave={() => setHovered(0)}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          className={`star ${star <= (hovered || rating) ? 'filled' : ''} ${interactive ? 'interactive' : ''}`}
-          onClick={() => interactive && onRate(star)}
-          onMouseEnter={() => interactive && setHovered(star)}
-          role={interactive ? 'button' : 'presentation'}
-          aria-label={interactive ? `Rate ${star} stars` : `${star} stars`}
+    <div className="rating-buttons">
+      {scores.map((score) => (
+        <button
+          key={score}
+          type="button"
+          className={`rating-button ${value === score ? 'selected' : ''}`}
+          onClick={() => !disabled && onChange(score)}
+          disabled={disabled}
         >
-          ★
-        </span>
+          {score}
+        </button>
       ))}
     </div>
   );
 };
 
-StarRating.propTypes = {
-  rating: PropTypes.number.isRequired,
-  onRate: PropTypes.func,
-  interactive: PropTypes.bool
+ScoreButtons.propTypes = {
+  value: PropTypes.number,
+  onChange: PropTypes.func.isRequired,
+  disabled: PropTypes.bool
 };
 
 const AlbumRating = () => {
@@ -35,6 +34,7 @@ const AlbumRating = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedAlbumId, setSelectedAlbumId] = useState(null);
 
   const fetchAlbums = async () => {
     const result = await getAlbums();
@@ -85,50 +85,107 @@ const AlbumRating = () => {
     return <div className="album-rating-container"><p>No albums to rate yet.</p></div>;
   }
 
+  const handleAlbumClick = (albumId) => {
+    setSelectedAlbumId(albumId);
+  };
+
+  const selectedAlbum = selectedAlbumId
+    ? albums.find((album) => album._id === selectedAlbumId)
+    : null;
+
   return (
     <div className="album-rating-container">
-      <h2 className="section-title">Rate Albums</h2>
-      <div className="albums-grid">
-        {albums.map((album) => (
-          <div key={album._id} className="album-card">
-            <div className="album-cover-wrapper">
-              <img
-                src={album.cover}
-                alt={`${album.title} cover`}
-                className="album-cover"
-              />
-            </div>
-            <div className="album-info">
-              <h3 className="album-title">{album.title}</h3>
-              <p className="album-artist">{album.artist}</p>
-              <p className="album-meta">{album.year} &middot; {album.genre}</p>
-
-              <div className="rating-section">
-                <div className="average-rating">
-                  <span className="rating-number">
-                    {album.averageRating > 0 ? album.averageRating.toFixed(1) : '—'}
-                  </span>
-                  <StarRating rating={Math.round(album.averageRating)} interactive={false} />
-                  <span className="rating-count">
-                    ({album.totalRatings} {album.totalRatings === 1 ? 'rating' : 'ratings'})
-                  </span>
-                </div>
-
-                <div className="user-rating-section">
-                  <p className="your-rating-label">
-                    {album.userRating ? 'Your rating:' : 'Rate this album:'}
-                  </p>
-                  <StarRating
-                    rating={album.userRating || 0}
-                    onRate={(score) => !submitting && handleRate(album._id, score)}
-                    interactive={!submitting}
+      {!selectedAlbum && (
+        <>
+          <h2 className="section-title">Pick an album to rate</h2>
+          <div className="albums-grid">
+            {albums.map((album) => (
+              <button
+                key={album._id}
+                type="button"
+                className="album-card album-card-clickable"
+                onClick={() => handleAlbumClick(album._id)}
+              >
+                <div className="album-cover-wrapper">
+                  <img
+                    src={album.cover}
+                    alt={`${album.title} cover`}
+                    className="album-cover"
                   />
+                </div>
+                <div className="album-info">
+                  <h3 className="album-title">{album.title}</h3>
+                  <p className="album-artist">{album.artist}</p>
+                  <p className="album-meta">{album.year} &middot; {album.genre}</p>
+                  <div className="average-rating">
+                    <span className="rating-number">
+                      {album.averageRating > 0 ? album.averageRating.toFixed(1) : '—'}
+                    </span>
+                    <span className="rating-count">
+                      ({album.totalRatings} {album.totalRatings === 1 ? 'rating' : 'ratings'})
+                    </span>
+                    <span className="rating-scale-label">out of 10</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {selectedAlbum && (
+        <>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => setSelectedAlbumId(null)}
+          >
+            ← Back to albums
+          </button>
+
+          <div className="albums-grid">
+            <div className="album-card">
+              <div className="album-cover-wrapper">
+                <img
+                  src={selectedAlbum.cover}
+                  alt={`${selectedAlbum.title} cover`}
+                  className="album-cover"
+                />
+              </div>
+              <div className="album-info">
+                <h3 className="album-title">{selectedAlbum.title}</h3>
+                <p className="album-artist">{selectedAlbum.artist}</p>
+                <p className="album-meta">{selectedAlbum.year} &middot; {selectedAlbum.genre}</p>
+
+                <div className="rating-section">
+                  <div className="average-rating">
+                    <span className="rating-number">
+                      {selectedAlbum.averageRating > 0 ? selectedAlbum.averageRating.toFixed(1) : '—'}
+                    </span>
+                    <span className="rating-count">
+                      ({selectedAlbum.totalRatings} {selectedAlbum.totalRatings === 1 ? 'rating' : 'ratings'})
+                    </span>
+                    <span className="rating-scale-label">average out of 10</span>
+                  </div>
+
+                  <div className="user-rating-section">
+                    <p className="your-rating-label">
+                      {selectedAlbum.userRating
+                        ? `Your rating: ${selectedAlbum.userRating}/10`
+                        : 'Click a number to rate (1–10):'}
+                    </p>
+                    <ScoreButtons
+                      value={selectedAlbum.userRating || 0}
+                      onChange={(score) => !submitting && handleRate(selectedAlbum._id, score)}
+                      disabled={submitting}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 };
