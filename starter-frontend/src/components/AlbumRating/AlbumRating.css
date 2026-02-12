@@ -13,13 +13,14 @@
 
 .albums-grid {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 24px;
 }
 
 .album-card {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   background: #ffffff;
   border-radius: 16px;
   padding: 20px;
@@ -30,6 +31,17 @@
 .album-card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
+}
+
+.album-card-clickable {
+  cursor: pointer;
+  border: none;
+  text-align: left;
+}
+
+.album-card-clickable:focus-visible {
+  outline: 2px solid #1a1a2e;
+  outline-offset: 3px;
 }
 
 .album-cover-wrapper {
@@ -85,6 +97,11 @@
   gap: 8px;
 }
 
+.rating-scale-label {
+  font-size: 0.8rem;
+  color: #777;
+}
+
 .rating-number {
   font-size: 1.6rem;
   font-weight: 700;
@@ -97,42 +114,69 @@
   color: #999;
 }
 
+.rating-scale-label {
+  font-size: 0.8rem;
+  color: #777;
+}
+
 .user-rating-section {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .your-rating-label {
   font-size: 0.9rem;
   color: #666;
   margin: 0;
-  white-space: nowrap;
 }
 
-/* Star rating */
-.star-rating {
-  display: inline-flex;
-  gap: 2px;
+.rating-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.star {
-  font-size: 1.6rem;
-  color: #ddd;
-  transition: color 0.15s ease, transform 0.15s ease;
-  user-select: none;
-}
-
-.star.filled {
-  color: #f5a623;
-}
-
-.star.interactive {
+.rating-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
-.star.interactive:hover {
-  transform: scale(1.2);
+.rating-button:hover:not(:disabled) {
+  background: #e9f0ff;
+  border-color: #4460f7;
+  transform: translateY(-1px);
+}
+
+.rating-button.selected {
+  background: #4460f7;
+  border-color: #4460f7;
+  color: #fff;
+}
+
+.rating-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.back-button {
+  border: none;
+  background: none;
+  color: #4460f7;
+  cursor: pointer;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.back-button:hover {
+  text-decoration: underline;
 }
 
 .album-error {

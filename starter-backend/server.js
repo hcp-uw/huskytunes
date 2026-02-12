@@ -208,13 +208,13 @@ app.get('/api/albums/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Rate an album
+// Rate an album (score 1–10)
 app.post('/api/albums/:id/rate', requireAuth, async (req, res) => {
   try {
     const { score } = req.body;
 
-    if (!score || score < 1 || score > 5 || !Number.isInteger(score)) {
-      return res.status(400).json({ error: 'Score must be an integer between 1 and 5' });
+    if (!score || score < 1 || score > 10 || !Number.isInteger(score)) {
+      return res.status(400).json({ error: 'Score must be an integer between 1 and 10' });
     }
 
     const album = await getAlbumById(req.params.id);
