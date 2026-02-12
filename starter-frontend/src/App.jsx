@@ -4,13 +4,10 @@ import Login from './components/Login/Login'
 import { getCurrentUser, logout } from './services/auth';
 import './App.css'
 
-// The App component is the root component of the application.
 const App = () => {
-
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       const result = await getCurrentUser();
@@ -31,12 +28,10 @@ const App = () => {
     setUser(null);
   }
 
-  // Show loading state while checking authentication
   if (loading) {
     return <div className='home-page'>Loading...</div>
   }
 
-  // Show login form if user is not authenticated
   if (!user) {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
