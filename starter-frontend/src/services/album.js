@@ -11,6 +11,12 @@ const getAlbums = async () => {
     const response = await axios.get(baseURL);
     return { success: true, data: response.data };
   } catch (error) {
+    if (!error.response) {
+      return {
+        success: false,
+        error: 'Could not reach server. Is the backend running on port 3001?'
+      };
+    }
     return {
       success: false,
       error: error.response?.data?.error || 'Failed to fetch albums'

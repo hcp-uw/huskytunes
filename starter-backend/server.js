@@ -18,6 +18,7 @@ const {
   ensureAlbum
 } = require('./models/album');
 const { searchAlbums, getAlbumDetails } = require('./services/spotify');
+// Prefer .env in backend folder; fall back to project root
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
