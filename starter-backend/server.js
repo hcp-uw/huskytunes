@@ -6,7 +6,6 @@ const { unknownEndpoint } = require('./middleware');
 const { requireAuth } = require('./middleware/auth');
 const { connect } = require('./db');  // database connection
 const { createUser, findUserByUsername, verifyPassword } = require('./models/user');
-const { seedSampleAlbum, getAllAlbums, getAlbumById, getAlbumRatings, getAlbumAverageRating, rateAlbum, getUserRating } = require('./models/album');
 require('dotenv').config();
 
 // create your express application

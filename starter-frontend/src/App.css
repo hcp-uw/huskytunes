@@ -43,7 +43,9 @@
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.logout-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
+.message {
+  font-size: 1.5em;
+  max-width: 50%;
+  text-align: center;
+  margin: 20px auto;
 }
