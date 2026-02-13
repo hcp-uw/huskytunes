@@ -18,7 +18,6 @@ const {
   ensureAlbum
 } = require('./models/album');
 const { searchAlbums, getAlbumDetails } = require('./services/spotify');
-
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
