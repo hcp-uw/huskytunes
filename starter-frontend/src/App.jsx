@@ -61,25 +61,6 @@ const App = () => {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-  }
-
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-  }
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return <div className='home-page'>Loading...</div>
-  }
-
-  // Show login form if user is not authenticated
-  if (!user) {
-    return <Login onLoginSuccess={handleLoginSuccess} />
-  }
-
   return (
     <div className='home-page'>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>
