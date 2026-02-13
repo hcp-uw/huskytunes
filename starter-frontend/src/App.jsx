@@ -32,6 +32,7 @@ const App = () => {
     return <div className='home-page'>Loading...</div>
   }
 
+  // Show login form if user is not authenticated
   if (!user) {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
