@@ -6,8 +6,19 @@ const { unknownEndpoint } = require('./middleware');
 const { requireAuth } = require('./middleware/auth');
 const { connect } = require('./db');  // database connection
 const { createUser, findUserByUsername, verifyPassword } = require('./models/user');
-const { seedSampleAlbum } = require('./models/album');
-require('dotenv').config();
+const path = require('path');
+const {
+  seedSampleAlbum,
+  getAllAlbums,
+  getAlbumById,
+  getAlbumRatings,
+  getAlbumAverageRating,
+  rateAlbum,
+  getUserRating
+} = require('./models/album');
+// Prefer .env in backend folder; fall back to project root
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // create your express application
 const app = express();

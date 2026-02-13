@@ -1,20 +1,12 @@
 import { useEffect, useState } from 'react'
-import FeaturedImages from './components/FeaturedImages/FeaturedImages'
-import DrawingCanvas from './components/DrawingCanvas/DrawingCanvas'
+import AlbumRating from './components/AlbumRating/AlbumRating'
 import Login from './components/Login/Login'
-import { getMessage } from './services/message';
 import { getCurrentUser, logout } from './services/auth';
 import './App.css'
 
 // The App component is the root component of the application.
 const App = () => {
 
-  // The App component uses the `useState` hook to define a
-  // state variable `message` and a function `setMessage` to update it.
-  // The initial value of `message` is an empty string, and
-  // calling `setMessage` will update the value of `message`,
-  // and trigger a re-render of the component.
-  const [message, setMessage] = useState('')
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -29,18 +21,6 @@ const App = () => {
     };
     checkAuth();
   }, [])
-
-  // The `useEffect` hook runs the callback function passed to it.
-  // The second argument is the dependency array, which is an array of
-  // variables that, when changed, will trigger the callback function.
-  // Given an empty array, the callback function will only run once,
-  // when the component is first rendered.
-  useEffect(() => {
-    // Only fetch message if user is logged in
-    if (user) {
-      getMessage().then(message => setMessage(message))
-    }
-  }, [user])
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -63,15 +43,16 @@ const App = () => {
 
   return (
     <div className='home-page'>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>
-        <div>Welcome, {user.username}!</div>
-        <button onClick={handleLogout} style={{ padding: '8px 16px', cursor: 'pointer' }}>
-          Logout
-        </button>
-      </div>
-      <FeaturedImages/>
-      <p className='message'>{message}</p>
-      <DrawingCanvas />
+      <header className='app-header'>
+        <h1 className='app-title'>HuskyTunes</h1>
+        <div className='header-right'>
+          <span className='welcome-text'>Welcome, {user.username}!</span>
+          <button onClick={handleLogout} className='logout-button'>
+            Logout
+          </button>
+        </div>
+      </header>
+      <AlbumRating />
     </div>
   )
 }
