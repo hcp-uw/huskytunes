@@ -61,13 +61,25 @@ const App = () => {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
-  // React components return JSX, which is a syntax extension for JavaScript.
-  // It looks a lot like HTML, with some key differences. For example, the
-  // `className` attribute is used instead of `class` to define a CSS class.
-  // One of the most powerful features of JSX is that it allows you to embed
-  // JavaScript expressions inside braces `{}`. This allows you to use variables
-  // and expressions to define the structure of your UI, including stateful
-  // values that will not only be displayed, but also automatically re-rendered
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+  }
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+  }
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return <div className='home-page'>Loading...</div>
+  }
+
+  // Show login form if user is not authenticated
+  if (!user) {
+    return <Login onLoginSuccess={handleLoginSuccess} />
+  }
+
   return (
     <div className='home-page'>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>

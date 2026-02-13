@@ -154,6 +154,95 @@ app.get('/image/featured', (req, res) => {
     res.send(images);
 })
 
+// Album routes
+
+// Get all albums with their average ratings
+app.get('/api/albums', requireAuth, async (req, res) => {
+  try {
+    const albums = await getAllAlbums();
+
+    // Attach average rating to each album
+    const albumsWithRatings = await Promise.all(
+      albums.map(async (album) => {
+        const ratingInfo = await getAlbumAverageRating(album._id.toString());
+        const userRating = await getUserRating(album._id.toString(), req.session.userId);
+        return {
+          ...album,
+          averageRating: ratingInfo.average,
+          totalRatings: ratingInfo.count,
+          userRating: userRating ? userRating.score : null
+        };
+      })
+    );
+
+    res.json(albumsWithRatings);
+  } catch (error) {
+    console.error('Error fetching albums:', error);
+    res.status(500).json({ error: 'Failed to fetch albums' });
+  }
+});
+
+// Get a single album with its ratings
+app.get('/api/albums/:id', requireAuth, async (req, res) => {
+  try {
+    const album = await getAlbumById(req.params.id);
+    if (!album) {
+      return res.status(404).json({ error: 'Album not found' });
+    }
+
+    const ratingInfo = await getAlbumAverageRating(album._id.toString());
+    const ratings = await getAlbumRatings(album._id.toString());
+    const userRating = await getUserRating(album._id.toString(), req.session.userId);
+
+    res.json({
+      ...album,
+      averageRating: ratingInfo.average,
+      totalRatings: ratingInfo.count,
+      ratings: ratings,
+      userRating: userRating ? userRating.score : null
+    });
+  } catch (error) {
+    console.error('Error fetching album:', error);
+    res.status(500).json({ error: 'Failed to fetch album' });
+  }
+});
+
+// Rate an album (score 1–10)
+app.post('/api/albums/:id/rate', requireAuth, async (req, res) => {
+  try {
+    const { score } = req.body;
+
+    if (!score || score < 1 || score > 10 || !Number.isInteger(score)) {
+      return res.status(400).json({ error: 'Score must be an integer between 1 and 10' });
+    }
+
+    const album = await getAlbumById(req.params.id);
+    if (!album) {
+      return res.status(404).json({ error: 'Album not found' });
+    }
+
+    await rateAlbum(
+      album._id.toString(),
+      req.session.userId,
+      req.session.username,
+      score
+    );
+
+    // Return updated rating info
+    const ratingInfo = await getAlbumAverageRating(album._id.toString());
+
+    res.json({
+      message: 'Rating submitted',
+      averageRating: ratingInfo.average,
+      totalRatings: ratingInfo.count,
+      userRating: score
+    });
+  } catch (error) {
+    console.error('Error rating album:', error);
+    res.status(500).json({ error: 'Failed to submit rating' });
+  }
+});
+
 // error handling
 app.use(unknownEndpoint);
 
@@ -162,7 +251,9 @@ const PORT = 3001;
 
 // start your server
 connect()
-  .then(() => {
+  .then(async () => {
+    // Seed sample album data if the albums collection is empty
+    await seedSampleAlbum();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
