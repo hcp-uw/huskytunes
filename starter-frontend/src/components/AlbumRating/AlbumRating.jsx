@@ -121,10 +121,12 @@ const AlbumRating = () => {
                     <span className="rating-number">
                       {album.averageRating > 0 ? album.averageRating.toFixed(1) : '—'}
                     </span>
-                    <span className="rating-count">
-                      ({album.totalRatings} {album.totalRatings === 1 ? 'rating' : 'ratings'})
-                    </span>
-                    <span className="rating-scale-label">out of 10</span>
+                    <div className="rating-details">
+                      <span className="rating-scale-label">Avg Rating</span>
+                      <span className="rating-count">
+                        ({album.totalRatings} {album.totalRatings === 1 ? 'rating' : 'ratings'})
+                      </span>
+                    </div>
                   </div>
                 </div>
               </button>
@@ -134,7 +136,7 @@ const AlbumRating = () => {
       )}
 
       {selectedAlbum && (
-        <>
+        <div className="selected-album-container">
           <button
             type="button"
             className="back-button"
@@ -143,48 +145,48 @@ const AlbumRating = () => {
             ← Back to albums
           </button>
 
-          <div className="albums-grid">
-            <div className="album-card">
-              <div className="album-cover-wrapper">
-                <img
-                  src={selectedAlbum.cover}
-                  alt={`${selectedAlbum.title} cover`}
-                  className="album-cover"
-                />
-              </div>
-              <div className="album-info">
-                <h3 className="album-title">{selectedAlbum.title}</h3>
-                <p className="album-artist">{selectedAlbum.artist}</p>
-                <p className="album-meta">{selectedAlbum.year} &middot; {selectedAlbum.genre}</p>
+          <div className="album-detail-card">
+            <div className="album-cover-wrapper">
+              <img
+                src={selectedAlbum.cover}
+                alt={`${selectedAlbum.title} cover`}
+                className="album-cover"
+              />
+            </div>
+            <div className="album-info">
+              <h3 className="album-title">{selectedAlbum.title}</h3>
+              <p className="album-artist">{selectedAlbum.artist}</p>
+              <p className="album-meta">{selectedAlbum.year} &middot; {selectedAlbum.genre}</p>
 
-                <div className="rating-section">
-                  <div className="average-rating">
-                    <span className="rating-number">
-                      {selectedAlbum.averageRating > 0 ? selectedAlbum.averageRating.toFixed(1) : '—'}
-                    </span>
+              <div className="rating-section">
+                <div className="average-rating">
+                  <span className="rating-number">
+                    {selectedAlbum.averageRating > 0 ? selectedAlbum.averageRating.toFixed(1) : '—'}
+                  </span>
+                  <div className="rating-details">
+                    <span className="rating-scale-label">Average Rating</span>
                     <span className="rating-count">
                       ({selectedAlbum.totalRatings} {selectedAlbum.totalRatings === 1 ? 'rating' : 'ratings'})
                     </span>
-                    <span className="rating-scale-label">average out of 10</span>
                   </div>
+                </div>
 
-                  <div className="user-rating-section">
-                    <p className="your-rating-label">
-                      {selectedAlbum.userRating
-                        ? `Your rating: ${selectedAlbum.userRating}/10`
-                        : 'Click a number to rate (1–10):'}
-                    </p>
-                    <ScoreButtons
-                      value={selectedAlbum.userRating || 0}
-                      onChange={(score) => !submitting && handleRate(selectedAlbum._id, score)}
-                      disabled={submitting}
-                    />
-                  </div>
+                <div className="user-rating-section">
+                  <p className="your-rating-label">
+                    {selectedAlbum.userRating
+                      ? `Your rating: ${selectedAlbum.userRating}/10`
+                      : 'Click a number to rate (1–10):'}
+                  </p>
+                  <ScoreButtons
+                    value={selectedAlbum.userRating || 0}
+                    onChange={(score) => !submitting && handleRate(selectedAlbum._id, score)}
+                    disabled={submitting}
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

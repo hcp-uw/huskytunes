@@ -1,8 +1,29 @@
+:root {
+  --primary-color: #5a32a3;
+  --primary-light: #7b4fc3;
+  --secondary-color: #f5f6fa;
+  --text-dark: #1a1a2e;
+  --text-light: #ffffff;
+  --text-muted: #666666;
+  --accent-color: #ffd700; /* Gold for Husky theme */
+  --bg-color: #f0f2f5;
+  --card-bg: #ffffff;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-    margin: 0;
-    font-family: Abril Fatface;
-    background: #f5f6ff;
-  }
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-dark);
+  line-height: 1.5;
+}
   
   /* NAVBAR */
   .navbar {
@@ -97,4 +118,9 @@ body {
     border-radius: 50%;
     margin: auto;
     margin-bottom: 10px;
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
   }

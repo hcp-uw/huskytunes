@@ -1,204 +1,224 @@
 .album-rating-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 0 20px;
+  width: 100%;
 }
 
 .section-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-  color: #1a1a2e;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  border-bottom: 3px solid var(--primary-color);
+  display: inline-block;
+  padding-bottom: 0.5rem;
 }
 
 .albums-grid {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 .album-card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
   display: flex;
-  gap: 16px;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  flex-direction: column;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .album-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .album-card-clickable {
   cursor: pointer;
   border: none;
   text-align: left;
-}
-
-.album-card-clickable:focus-visible {
-  outline: 2px solid #1a1a2e;
-  outline-offset: 3px;
+  padding: 0;
+  width: 100%;
 }
 
 .album-cover-wrapper {
-  flex-shrink: 0;
-  width: 200px;
-  height: 200px;
-  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  background: #eee;
 }
 
 .album-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.album-card:hover .album-cover {
+  transform: scale(1.05);
 }
 
 .album-info {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  flex: 1;
+  gap: 0.5rem;
 }
 
 .album-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin: 0 0 4px 0;
-  color: #1a1a2e;
+  margin: 0;
+  color: var(--text-dark);
+  line-height: 1.2;
 }
 
 .album-artist {
-  font-size: 1.1rem;
-  color: #555;
-  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  margin: 0;
 }
 
 .album-meta {
-  font-size: 0.9rem;
-  color: #888;
-  margin: 0 0 16px 0;
-}
-
-.rating-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
 }
 
 .average-rating {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.rating-scale-label {
-  font-size: 0.8rem;
-  color: #777;
+  gap: 0.75rem;
+  background: var(--secondary-color);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: auto;
 }
 
 .rating-number {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #1a1a2e;
-  min-width: 32px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.rating-details {
+  display: flex;
+  flex-direction: column;
 }
 
 .rating-count {
-  font-size: 0.85rem;
-  color: #999;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .rating-scale-label {
-  font-size: 0.8rem;
-  color: #777;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Selected Album View */
+.selected-album-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  width: fit-content;
+  transition: transform 0.2s ease;
+}
+
+.back-button:hover {
+  transform: translateX(-4px);
+}
+
+.album-detail-card {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 3rem;
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.rating-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
 }
 
 .user-rating-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  margin-top: 1.5rem;
 }
 
 .your-rating-label {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-dark);
 }
 
 .rating-buttons {
   display: flex;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  gap: 6px;
 }
 
 .rating-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: 1px solid #ccc;
-  background: #f8f8f8;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 2px solid #eee;
+  background: white;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
 }
 
 .rating-button:hover:not(:disabled) {
-  background: #e9f0ff;
-  border-color: #4460f7;
-  transform: translateY(-1px);
+  border-color: var(--primary-light);
+  background: var(--secondary-color);
+  transform: translateY(-2px);
 }
 
 .rating-button.selected {
-  background: #4460f7;
-  border-color: #4460f7;
-  color: #fff;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(90, 50, 163, 0.3);
 }
 
 .rating-button:disabled {
-  opacity: 0.6;
-  cursor: default;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.back-button {
-  border: none;
-  background: none;
-  color: #4460f7;
-  cursor: pointer;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
-}
-
-.back-button:hover {
-  text-decoration: underline;
-}
-
-.album-error {
-  color: #e74c3c;
-  font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .album-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+@media (max-width: 900px) {
+  .album-detail-card {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 1.5rem;
   }
-
+  
   .album-cover-wrapper {
-    width: 160px;
-    height: 160px;
-  }
-
-  .average-rating,
-  .user-rating-section {
-    justify-content: center;
+    max-width: 300px;
+    margin: 0 auto;
   }
 }

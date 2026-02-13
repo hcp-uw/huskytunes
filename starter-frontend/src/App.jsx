@@ -49,7 +49,9 @@ const App = () => {
           </button>
         </div>
       </header>
-      <AlbumRating />
+      <main>
+        <AlbumRating />
+      </main>
     </div>
   )
 }
