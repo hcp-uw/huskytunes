@@ -55,4 +55,3 @@ npm start
 ### Contributing 🤝
 
 If you have any feedback feel free to submit an issue/pull request! Contributions are more than welcome.
-
