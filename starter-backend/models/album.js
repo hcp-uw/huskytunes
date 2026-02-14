@@ -5,61 +5,103 @@ const collectionName = 'albums';
 
 // Seed sample albums if none exist
 async function seedSampleAlbum() {
-  const db = getDb();
-  const albums = db.collection(collectionName);
-
-  const count = await albums.countDocuments();
-  if (count === 0) {
-    const now = new Date();
-    await albums.insertMany([
-      {
-        title: 'The Glow Pt. 2',
-        artist: 'The Microphones',
-        year: 2001,
-        cover: 'https://upload.wikimedia.org/wikipedia/en/7/7e/Microphones_-_The_Glow_Pt._2_%282001_album%29_cover_art.jpg',
-        genre: 'Indie Rock',
-        createdAt: now
-      },
-      {
-        title: 'In the Aeroplane Over the Sea',
-        artist: 'Neutral Milk Hotel',
-        year: 1998,
-        cover: 'https://upload.wikimedia.org/wikipedia/en/5/5f/In_the_aeroplane_over_the_sea_album_cover_copy.jpg',
-        genre: 'Indie Folk',
-        createdAt: now
-      },
-      {
-        title: 'Kid A',
-        artist: 'Radiohead',
-        year: 2000,
-        cover: 'https://upload.wikimedia.org/wikipedia/en/0/02/Radiohead.kida.albumart.jpg',
-        genre: 'Experimental Rock',
-        createdAt: now
-      }
-    ]);
-    console.log('Seeded sample albums: The Glow Pt. 2 and others');
-  }
+  // We no longer seed sample albums to keep the site focused on API-driven content
+  return;
 }
 
 // Get all albums with their average ratings
 async function getAllAlbums() {
   const db = getDb();
   const albums = db.collection(collectionName);
-  return await albums.find({}).toArray();
+  const ratings = db.collection('ratings');
+
+  console.log('getAllAlbums: Fetching albums with ratings...');
+
+  // Use aggregation to get all albums and their rating counts
+  const albumsWithCounts = await albums.aggregate([
+    {
+      $lookup: {
+        from: 'ratings',
+        localField: '_id',
+        foreignField: 'albumId',
+        as: 'albumRatings'
+      }
+    },
+    // Fallback lookup: also check if ratings are linked via string albumId
+    {
+      $lookup: {
+        from: 'ratings',
+        let: { album_id_str: { $toString: "$_id" } },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$albumId", "$$album_id_str"] } } }
+        ],
+        as: 'albumRatingsStr'
+      }
+    },
+    {
+      $addFields: {
+        allRatings: { $concatArrays: ["$albumRatings", "$albumRatingsStr"] }
+      }
+    },
+    {
+      $addFields: {
+        totalRatings: { $size: '$allRatings' },
+        averageRating: { $avg: '$allRatings.score' }
+      }
+    },
+    {
+      $match: { totalRatings: { $gt: 0 } }
+    },
+    { $sort: { totalRatings: -1, averageRating: -1 } },
+    { $limit: 10 }
+  ]).toArray();
+
+  console.log(`getAllAlbums: Found ${albumsWithCounts.length} albums with ratings.`);
+
+  // Convert ObjectId to string for consistency
+  return albumsWithCounts.map(album => ({
+    ...album,
+    _id: album._id.toString()
+  }));
 }
 
 // Get a single album by ID
 async function getAlbumById(albumId) {
   const db = getDb();
   const albums = db.collection(collectionName);
-  return await albums.findOne({ _id: new ObjectId(albumId) });
+  
+  console.log('getAlbumById called with:', albumId);
+
+  // Try finding by spotifyId first
+  let album = await albums.findOne({ spotifyId: albumId });
+  if (album) return album;
+
+  // Only try to convert to ObjectId if it's a valid 24-character hex string
+  if (typeof albumId === 'string' && albumId.length === 24) {
+    try {
+      return await albums.findOne({ _id: new ObjectId(albumId) });
+    } catch (e) {
+      console.log('Invalid ObjectId format in getAlbumById:', albumId);
+    }
+  }
+  
+  return null;
 }
 
 // Get all ratings for an album
 async function getAlbumRatings(albumId) {
   const db = getDb();
   const ratings = db.collection('ratings');
-  return await ratings.find({ albumId: albumId }).toArray();
+  
+  // Try matching by both ObjectId and string representation
+  const query = {
+    $or: [
+      { albumId: albumId },
+      { albumId: albumId.length === 24 ? new ObjectId(albumId) : albumId }
+    ]
+  };
+  
+  return await ratings.find(query).toArray();
 }
 
 // Get the average rating for an album
@@ -67,11 +109,19 @@ async function getAlbumAverageRating(albumId) {
   const db = getDb();
   const ratings = db.collection('ratings');
 
+  // Try matching by both ObjectId and string representation
+  const matchQuery = {
+    $or: [
+      { albumId: albumId },
+      { albumId: albumId.length === 24 ? new ObjectId(albumId) : albumId }
+    ]
+  };
+
   const result = await ratings.aggregate([
-    { $match: { albumId: albumId } },
+    { $match: matchQuery },
     {
       $group: {
-        _id: '$albumId',
+        _id: null,
         average: { $avg: '$score' },
         count: { $sum: 1 }
       }
@@ -89,24 +139,35 @@ async function getAlbumAverageRating(albumId) {
 }
 
 // Add or update a rating for an album by a user
-async function rateAlbum(albumId, userId, username, score) {
+async function rateAlbum(albumId, userId, username, score, review = '') {
   const db = getDb();
   const ratings = db.collection('ratings');
+
+  console.log('Backend rateAlbum called with:', { albumId, userId, username, score, review });
+
+  const updateData = {
+    albumId: albumId,
+    userId: userId,
+    username: username,
+    score: score,
+    updatedAt: new Date()
+  };
+
+  // Only include review if it's not empty
+  if (review && review.trim().length > 0) {
+    updateData.review = review.trim();
+  }
 
   // Upsert: update if the user already rated this album, insert otherwise
   const result = await ratings.updateOne(
     { albumId: albumId, userId: userId },
     {
-      $set: {
-        albumId: albumId,
-        userId: userId,
-        username: username,
-        score: score,
-        updatedAt: new Date()
-      },
+      $set: updateData,
       $setOnInsert: {
         createdAt: new Date()
-      }
+      },
+      // If the new review is empty, remove the existing review field
+      ...(!review || review.trim().length === 0 ? { $unset: { review: "" } } : {})
     },
     { upsert: true }
   );
@@ -118,7 +179,68 @@ async function rateAlbum(albumId, userId, username, score) {
 async function getUserRating(albumId, userId) {
   const db = getDb();
   const ratings = db.collection('ratings');
-  return await ratings.findOne({ albumId: albumId, userId: userId });
+  
+  const query = {
+    $and: [
+      { userId: userId },
+      {
+        $or: [
+          { albumId: albumId },
+          { albumId: albumId.length === 24 ? new ObjectId(albumId) : albumId }
+        ]
+      }
+    ]
+  };
+  
+  return await ratings.findOne(query);
+}
+
+// Ensure album exists in DB (for Spotify albums)
+async function ensureAlbum(albumData) {
+  try {
+    const db = getDb();
+    const albums = db.collection(collectionName);
+    
+    const spotifyId = albumData.spotifyId;
+    const mongoId = albumData._id;
+
+    console.log('Backend ensureAlbum called with:', { spotifyId, mongoId });
+    
+    // Try to find by spotifyId first
+    let album = null;
+    if (spotifyId) {
+      album = await albums.findOne({ spotifyId: spotifyId });
+    }
+    
+    // If not found by spotifyId, try by _id if it's a valid ObjectId
+    if (!album && mongoId && typeof mongoId === 'string' && mongoId.length === 24) {
+      try {
+        album = await albums.findOne({ _id: new ObjectId(mongoId) });
+      } catch (e) {
+        console.log('Invalid ObjectId format:', mongoId);
+      }
+    }
+
+    if (!album) {
+      console.log('Album not found in DB, creating new entry for:', albumData.title);
+      const newAlbum = {
+        title: albumData.title,
+        artist: albumData.artist,
+        year: parseInt(albumData.year) || 0,
+        cover: albumData.cover,
+        genre: albumData.genre || 'Music',
+        spotifyId: albumData.spotifyId || null,
+        createdAt: new Date()
+      };
+      const result = await albums.insertOne(newAlbum);
+      return { ...newAlbum, _id: result.insertedId };
+    }
+
+    return album;
+  } catch (error) {
+    console.error('Error in ensureAlbum:', error);
+    throw error;
+  }
 }
 
 module.exports = {
@@ -128,5 +250,6 @@ module.exports = {
   getAlbumRatings,
   getAlbumAverageRating,
   rateAlbum,
-  getUserRating
+  getUserRating,
+  ensureAlbum
 };

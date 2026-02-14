@@ -38,11 +38,17 @@ const getAlbum = async (albumId) => {
 };
 
 // Rate an album (1-5 stars)
-const rateAlbum = async (albumId, score) => {
+const rateAlbum = async (albumId, score, review = '', albumData = null) => {
   try {
-    const response = await axios.post(`${baseURL}/${albumId}/rate`, { score });
+    console.log('Frontend rateAlbum calling backend for ID:', albumId);
+    const response = await axios.post(`${baseURL}/${albumId}/rate`, { 
+      score, 
+      review,
+      albumData // Send full data in case it needs to be created in DB
+    });
     return { success: true, data: response.data };
   } catch (error) {
+    console.error('Rating error details:', error.response?.data || error.message);
     return {
       success: false,
       error: error.response?.data?.error || 'Failed to submit rating'
@@ -50,4 +56,31 @@ const rateAlbum = async (albumId, score) => {
   }
 };
 
-export { getAlbums, getAlbum, rateAlbum };
+// Search Spotify
+const searchSpotify = async (query) => {
+  try {
+    const response = await axios.get(`http://localhost:3001/api/spotify/search?q=${query}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('Search error details:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Failed to search Spotify'
+    };
+  }
+};
+
+// Delete a rating
+const deleteRating = async (albumId) => {
+  try {
+    const response = await axios.delete(`${baseURL}/${albumId}/rate`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Failed to delete rating'
+    };
+  }
+};
+
+export { getAlbums, getAlbum, rateAlbum, searchSpotify, deleteRating };
