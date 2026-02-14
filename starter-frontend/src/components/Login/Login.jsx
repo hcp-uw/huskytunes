@@ -47,13 +47,22 @@ const Login = ({ onLoginSuccess }) => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>{isLogin ? 'Login' : 'Register'}</h2>
+        <div className="login-header">
+          <span className="login-logo">🐾</span>
+          <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+          <p className="login-subtitle">
+            {isLogin 
+              ? 'Login to your HuskyTunes account' 
+              : 'Join the HuskyTunes community today'}
+          </p>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input
               type="text"
               id="username"
+              placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -65,6 +74,7 @@ const Login = ({ onLoginSuccess }) => {
             <input
               type="password"
               id="password"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -74,10 +84,13 @@ const Login = ({ onLoginSuccess }) => {
           </div>
           {error && <div className="error-message">{error}</div>}
           <button type="submit" disabled={loading} className="submit-button">
-            {loading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}
+            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Register')}
           </button>
         </form>
         <div className="toggle-form">
+          <span className="toggle-text">
+            {isLogin ? "Don't have an account?" : "Already have an account?"}
+          </span>
           <button
             type="button"
             onClick={() => {
@@ -86,9 +99,7 @@ const Login = ({ onLoginSuccess }) => {
             }}
             className="toggle-button"
           >
-            {isLogin
-              ? "Don't have an account? Register"
-              : 'Already have an account? Login'}
+            {isLogin ? 'Register now' : 'Login here'}
           </button>
         </div>
       </div>

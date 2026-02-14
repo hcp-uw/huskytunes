@@ -14,8 +14,10 @@ const {
   getAlbumRatings,
   getAlbumAverageRating,
   rateAlbum,
-  getUserRating
+  getUserRating,
+  ensureAlbum
 } = require('./models/album');
+const { searchAlbums, getAlbumDetails } = require('./services/spotify');
 // Prefer .env in backend folder; fall back to project root
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -169,25 +171,30 @@ app.get('/image/featured', (req, res) => {
 // Album routes
 
 // Get all albums with their average ratings
-app.get('/api/albums', requireAuth, async (req, res) => {
+app.get('/api/albums', async (req, res) => {
   try {
     const albums = await getAllAlbums();
 
-    // Attach average rating to each album
-    const albumsWithRatings = await Promise.all(
+    // The aggregation already provides counts and averages, 
+    // but we still need to check the current user's rating for each (if logged in)
+    const albumsWithUserRatings = await Promise.all(
       albums.map(async (album) => {
-        const ratingInfo = await getAlbumAverageRating(album._id.toString());
-        const userRating = await getUserRating(album._id.toString(), req.session.userId);
+        let userRating = null;
+        if (req.session && req.session.userId) {
+          const ratingDoc = await getUserRating(album._id.toString(), req.session.userId);
+          userRating = ratingDoc ? ratingDoc.score : null;
+        }
+        
         return {
           ...album,
-          averageRating: ratingInfo.average,
-          totalRatings: ratingInfo.count,
-          userRating: userRating ? userRating.score : null
+          averageRating: album.averageRating || 0,
+          totalRatings: album.totalRatings || 0,
+          userRating: userRating
         };
       })
     );
 
-    res.json(albumsWithRatings);
+    res.json(albumsWithUserRatings);
   } catch (error) {
     console.error('Error fetching albums:', error);
     res.status(500).json({ error: 'Failed to fetch albums' });
@@ -195,7 +202,7 @@ app.get('/api/albums', requireAuth, async (req, res) => {
 });
 
 // Get a single album with its ratings
-app.get('/api/albums/:id', requireAuth, async (req, res) => {
+app.get('/api/albums/:id', async (req, res) => {
   try {
     const album = await getAlbumById(req.params.id);
     if (!album) {
@@ -204,14 +211,28 @@ app.get('/api/albums/:id', requireAuth, async (req, res) => {
 
     const ratingInfo = await getAlbumAverageRating(album._id.toString());
     const ratings = await getAlbumRatings(album._id.toString());
-    const userRating = await getUserRating(album._id.toString(), req.session.userId);
+    
+    let userRating = null;
+    let review = null;
+    if (req.session && req.session.userId) {
+      const ratingDoc = await getUserRating(album._id.toString(), req.session.userId);
+      userRating = ratingDoc ? ratingDoc.score : null;
+      review = ratingDoc ? ratingDoc.review : null;
+    }
 
     res.json({
       ...album,
       averageRating: ratingInfo.average,
       totalRatings: ratingInfo.count,
-      ratings: ratings,
-      userRating: userRating ? userRating.score : null
+      ratings: ratings.map(r => ({
+        username: r.username,
+        score: r.score,
+        review: r.review,
+        updatedAt: r.updatedAt,
+        isMine: req.session && req.session.userId ? r.userId === req.session.userId : false
+      })),
+      userRating: userRating,
+      review: review
     });
   } catch (error) {
     console.error('Error fetching album:', error);
@@ -222,36 +243,148 @@ app.get('/api/albums/:id', requireAuth, async (req, res) => {
 // Rate an album (score 1–10)
 app.post('/api/albums/:id/rate', requireAuth, async (req, res) => {
   try {
-    const { score } = req.body;
+    const { score, review, albumData } = req.body;
+    console.log('Received rate request for ID:', req.params.id);
+    console.log('Body:', { score, review, hasAlbumData: !!albumData });
 
     if (!score || score < 1 || score > 10 || !Number.isInteger(score)) {
       return res.status(400).json({ error: 'Score must be an integer between 1 and 10' });
     }
 
-    const album = await getAlbumById(req.params.id);
+    // Ensure the album exists in our database first
+    let album;
+    if (albumData) {
+      console.log('Using albumData to ensure album exists');
+      album = await ensureAlbum(albumData);
+    } else {
+      console.log('Searching for album by ID:', req.params.id);
+      album = await getAlbumById(req.params.id);
+    }
+
     if (!album) {
+      console.log('Album not found after ensure/search');
       return res.status(404).json({ error: 'Album not found' });
     }
 
+    const albumId = album._id.toString();
+    console.log('Rating album with DB ID:', albumId);
+
     await rateAlbum(
-      album._id.toString(),
+      albumId,
       req.session.userId,
       req.session.username,
-      score
+      score,
+      review
     );
 
     // Return updated rating info
-    const ratingInfo = await getAlbumAverageRating(album._id.toString());
+    const ratingInfo = await getAlbumAverageRating(albumId);
 
     res.json({
       message: 'Rating submitted',
       averageRating: ratingInfo.average,
       totalRatings: ratingInfo.count,
-      userRating: score
+      userRating: score,
+      review: review
     });
   } catch (error) {
     console.error('Error rating album:', error);
-    res.status(500).json({ error: 'Failed to submit rating' });
+    res.status(500).json({ error: 'Failed to submit rating: ' + error.message });
+  }
+});
+
+// Delete a rating
+app.delete('/api/albums/:id/rate', requireAuth, async (req, res) => {
+  try {
+    const { getDb } = require('./db');
+    const db = getDb();
+    const ratings = db.collection('ratings');
+    const albums = db.collection('albums');
+    const albumId = req.params.id;
+    const userId = req.session.userId;
+
+    console.log('Delete request for albumId:', albumId, 'userId:', userId);
+
+    // Find the album first to get its real DB ID if a spotifyId was passed
+    let targetAlbumId = albumId;
+    if (albumId.length !== 24) {
+      const album = await albums.findOne({ spotifyId: albumId });
+      if (album) {
+        targetAlbumId = album._id.toString();
+      }
+    }
+
+    const result = await ratings.deleteOne({ albumId: targetAlbumId, userId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Rating not found' });
+    }
+
+    // Return updated rating info
+    const ratingInfo = await getAlbumAverageRating(targetAlbumId);
+
+    res.json({
+      message: 'Rating deleted',
+      averageRating: ratingInfo.average,
+      totalRatings: ratingInfo.count
+    });
+  } catch (error) {
+    console.error('Error deleting rating:', error);
+    res.status(500).json({ error: 'Failed to delete rating' });
+  }
+});
+
+// Spotify search
+app.get('/api/spotify/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    const results = await searchAlbums(q);
+    
+    // For each Spotify result, check if we have local ratings/data
+    const resultsWithLocalData = await Promise.all(
+      results.map(async (album) => {
+        // Try to find the album in our DB by spotifyId
+        const localAlbum = await getAlbumById(album.spotifyId);
+        if (localAlbum) {
+          const ratingInfo = await getAlbumAverageRating(localAlbum._id.toString());
+          
+          let userRating = null;
+          let review = null;
+          if (req.session && req.session.userId) {
+            const ratingDoc = await getUserRating(localAlbum._id.toString(), req.session.userId);
+            userRating = ratingDoc ? ratingDoc.score : null;
+            review = ratingDoc ? ratingDoc.review : null;
+          }
+
+          return {
+            ...album,
+            _id: localAlbum._id,
+            averageRating: ratingInfo.average,
+            totalRatings: ratingInfo.count,
+            userRating: userRating,
+            review: review
+          };
+        }
+        return album;
+      })
+    );
+    
+    res.json(resultsWithLocalData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Spotify album details
+app.get('/api/spotify/albums/:id', async (req, res) => {
+  try {
+    const details = await getAlbumDetails(req.params.id);
+    res.json(details);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
