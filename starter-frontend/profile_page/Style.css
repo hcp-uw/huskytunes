@@ -1,0 +1,138 @@
+.profile-title {
+  font-family: "Abril Fatface", serif;
+}
+
+.corben-regular {
+  font-family: "Corben", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.scroll-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 20px;
+  scroll-snap-type: x mandatory; /* Keeps scrolling smooth */
+}
+
+.gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 180px;
+  margin: 0;  
+  scroll-snap-align: start;
+  text-align: center; 
+}
+
+.gallery-item img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;   
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.gallery-item img:hover {
+    border: 4px solid #6970E6;
+}
+
+.circle-gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 180px;
+  margin: 0;  
+  scroll-snap-align: start;
+  text-align: center; 
+}
+
+.circle-gallery-item img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;   
+  border-radius: 50%; 
+  border: 2px solid #6970E6;
+  margin-bottom: 12px;
+}
+.circle-gallery-item img:hover {
+    border: 6px solid #6970E6;
+}
+
+.text-box-1 {
+  font-family: "Corben", serif;
+  margin-bottom: 4px;
+}
+
+.text-box-2 {
+  font-family: "Corben", serif;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.gridimg {
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    border-radius: 20px;
+}
+
+.gridimg:hover {
+    border: 4px solid #6970E6;
+}
+
+.number-box {
+    width: 120px;
+    height: 120px;
+    background-color: #CACCE8;
+    border: 2px solid #6970E6;
+    border-radius: 10px;
+    margin: 20px auto;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    color: black;
+    font-size: 32px;
+    font-weight: bold;
+    font-family: "Corben", serif;
+  }
+
+.button-box {
+    background-color: #CACCE8;
+    border: 2px solid #6970E6;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-align: center;
+    width: fit-content;
+    margin: 20px auto;
+    cursor: pointer;
+    color: #666;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: "Corben", serif;
+}
+
+.button-box:hover {
+  background-color: #5c60af;
+  color: black;
+}
+
+.header-button {
+    padding: 12px 28px;
+    text-align: center;
+    width: fit-content;
+    margin: 20px auto;
+    cursor: pointer;
+    color: #888;
+    font-size: 20px;
+    font-family: "Corben", serif;
+}
+
+.header-button:hover {
+    color: black;
+}
+
+
