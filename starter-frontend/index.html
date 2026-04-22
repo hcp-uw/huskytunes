@@ -1,13 +1,43 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Change me in starter-frontend/index.html</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Husky Tunes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">🎵</div>
+    <div class="nav-links">
+      <a href="#">home</a>
+      <a href="#">find friends</a>
+      <a href="#">profile</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>find a community through music</h1>
+    <div class="buttons">
+      <button>search for friends</button>
+      <button>search for artists</button>
+    </div>
+  </section>
+
+  <!-- TOP ARTISTS -->
+  <section class="section">
+    <h2>some of your current top artists and other users who like them</h2>
+    <div class="scroll-row" id="artistRow"></div>
+  </section>
+
+  <!-- RECOMMENDED -->
+  <section class="section">
+    <h2>here are some profiles we think you might enjoy based on your listening!</h2>
+    <div class="user-grid" id="userGrid"></div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
 </html>

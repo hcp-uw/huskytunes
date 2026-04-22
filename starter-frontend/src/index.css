@@ -1,3 +1,100 @@
 body {
-    background-color: rgb(201, 109, 254);
-}
+    margin: 0;
+    font-family: Abril Fatface;
+    background: #f5f6ff;
+  }
+  
+  /* NAVBAR */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background: linear-gradient(to right, #5a5fd6, #8f94fb);
+    color: white;
+  }
+  
+  .nav-links a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+  }
+  
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 80px 20px;
+    background: #d6d8ff;
+  }
+  
+  .hero h1 {
+    font-size: 42px;
+    margin-bottom: 25px;
+  }
+  
+  .buttons button {
+    padding: 12px 22px;
+    margin: 10px;
+    border-radius: 10px;
+    border: 1px solid #5a5fd6;
+    background: transparent;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .buttons button:hover {
+    background: #5a5fd6;
+    color: white;
+  }
+  
+  /* SECTIONS */
+  .section {
+    padding: 40px;
+  }
+  
+  .section h2 {
+    margin-bottom: 20px;
+  }
+  
+  /* SCROLL ROW (artists) */
+  .scroll-row {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+  }
+  
+  /* CARDS */
+  .card {
+    min-width: 140px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .card img {
+    width: 100%;
+    border-radius: 10px;
+  }
+  
+  /* USER GRID */
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 30px;
+    margin-top: 20px;
+  }
+  
+  .user {
+    text-align: center;
+  }
+  
+  .avatar {
+    width: 80px;
+    height: 80px;
+    background: black;
+    border-radius: 50%;
+    margin: auto;
+    margin-bottom: 10px;
+  }
