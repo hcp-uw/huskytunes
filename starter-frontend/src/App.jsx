@@ -6,6 +6,8 @@ import SearchResults from './components/SearchResults'
 import { getCurrentUser, logout } from './services/auth'
 import { getAlbums } from './services/album'
 import './App.css'
+import ProfileView from './components/ProfileView';
+
 
 const App = () => {
   const [user, setUser] = useState(null)
@@ -67,6 +69,12 @@ const App = () => {
     setSelectedAlbum(null)
     setSearchQuery('')
     setActiveSearchQuery('')
+  }
+
+  const navigateToProfile = () => {
+    setView('profile')
+    setSelectedAlbum(null)
+    setSearchQuery('')
   }
 
   if (loading) {
@@ -188,6 +196,8 @@ const App = () => {
           backText={activeSearchQuery ? 'back to search' : 'back to community'}
         />
       )}
+
+      {view === 'profile' && <ProfileView />}
 
       <footer className="py-12 border-t border-gray-100 text-center text-gray-400 text-sm">
         <p>© 2026 Husky Tunes. All rights reserved.</p>
