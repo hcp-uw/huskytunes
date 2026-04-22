@@ -131,7 +131,13 @@ const App = () => {
         <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
           <div className="flex gap-6 opacity-60">
             <button onClick={navigateToHome} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">home</button>
-            <a href="#" className="hover:opacity-100 transition-opacity cursor-pointer">profile</a>
+            <button
+              type="button"
+              onClick={navigateToProfile}
+              className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer"
+            >
+              profile
+            </button>
           </div>
           {user ? (
             <div className="flex items-center gap-4 pl-6 border-l border-white/20">
