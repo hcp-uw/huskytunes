@@ -1,26 +1,30 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { unifiedSearch } from '../services/album';
 import DefaultUserAvatar from './DefaultUserAvatar';
 
 const SearchResultCard = ({ album, onClick }) => {
   return (
-    <div 
+    <div
       onClick={() => onClick(album)}
       className="group flex items-center gap-8 p-6 bg-white rounded-3xl border border-gray-100 hover:border-husky-purple/20 hover:shadow-xl hover:shadow-husky-purple/5 transition-all cursor-pointer"
     >
       <div className="w-32 h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-lg">
         <img src={album.cover} alt={album.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
       </div>
-      
+
       <div className="flex-1 min-w-0">
         <h3 className="text-3xl font-black tracking-tighter truncate mb-1">{album.title}</h3>
-        <p className="text-xl font-serif italic text-gray-400">{album.artist} • {album.year}</p>
+        <p className="text-xl font-serif italic text-gray-400">
+          {album.artist} • {album.year}
+        </p>
       </div>
 
       <div className="flex flex-col items-end gap-2 pr-4">
         <div className="flex items-center gap-2">
           <span className="text-yellow-400 text-xl">★</span>
-          <span className="text-2xl font-black">{album.averageRating ? album.averageRating.toFixed(1) : '—'}</span>
+          <span className="text-2xl font-black">
+            {album.averageRating ? album.averageRating.toFixed(1) : '—'}
+          </span>
         </div>
         <p className="text-[10px] uppercase tracking-widest font-black text-gray-300">avg rating</p>
       </div>
@@ -145,9 +149,10 @@ const SearchResults = ({ query, user, onAlbumClick, onBack }) => {
   const toggle = (key) => {
     setFilters((prev) => {
       const next = { ...prev, [key]: !prev[key] };
-      const countOn =
-        (next.albums ? 1 : 0) + (next.artists ? 1 : 0) + (user && next.friends ? 1 : 0);
-      if (countOn === 0) return prev;
+      const countOn = (next.albums ? 1 : 0) + (next.artists ? 1 : 0) + (user && next.friends ? 1 : 0);
+      if (countOn === 0) {
+        return prev;
+      }
       return next;
     });
   };
@@ -155,11 +160,12 @@ const SearchResults = ({ query, user, onAlbumClick, onBack }) => {
   const visibleAlbums = filters.albums ? data.albums : [];
   const visibleArtists = filters.artists ? data.artists : [];
   const visibleUsers = user && filters.friends ? data.users : [];
+
   const totalHits = visibleAlbums.length + visibleArtists.length + visibleUsers.length;
   const qTrim = (query || '').trim();
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-[calc(100vh-5rem)] bg-white pb-20">
       <div className="h-20 bg-black" aria-hidden />
 
       <div className="max-w-4xl mx-auto px-8 pt-12">
@@ -172,25 +178,44 @@ const SearchResults = ({ query, user, onAlbumClick, onBack }) => {
         </button>
 
         <div className="mb-8">
-          <h2 className="text-5xl font-black tracking-tighter mb-2 text-black leading-tight">
-            {qTrim ? `results for "${query}"` : 'search'}
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter mb-2 text-black leading-tight">
+            {qTrim ? (
+              <>
+                results for &ldquo;{query}&rdquo;
+              </>
+            ) : (
+              'search'
+            )}
           </h2>
           <p className="text-gray-400 text-lg font-light">
-            {loading ? 'searching…' : error ? error : qTrim ? `found ${totalHits} result${totalHits === 1 ? '' : 's'}` : ''}
+            {loading
+              ? 'searching…'
+              : qTrim
+                ? error
+                  ? error
+                  : `found ${totalHits} result${totalHits === 1 ? '' : 's'}`
+                : 'search albums, artists, and people from the bar above.'}
           </p>
         </div>
 
         {qTrim && (
-          <div className="flex flex-wrap gap-2 mb-10">
-            <FilterPill label="albums" active={filters.albums} onToggle={() => toggle('albums')} />
-            <FilterPill label="artists" active={filters.artists} onToggle={() => toggle('artists')} />
-            <FilterPill
-              label="friends"
-              active={filters.friends}
-              disabled={!user}
-              onToggle={() => user && toggle('friends')}
-            />
-          </div>
+          <>
+            <div className="flex flex-wrap gap-2 mb-10">
+              <FilterPill label="albums" active={filters.albums} onToggle={() => toggle('albums')} />
+              <FilterPill label="artists" active={filters.artists} onToggle={() => toggle('artists')} />
+              <FilterPill
+                label="friends"
+                active={filters.friends}
+                disabled={!user}
+                onToggle={() => user && toggle('friends')}
+              />
+            </div>
+            {!user && (
+              <p className="text-xs text-gray-400 mb-10 -mt-6 font-medium">
+                Sign in to include HuskyTunes members in results.
+              </p>
+            )}
+          </>
         )}
 
         {!qTrim && (

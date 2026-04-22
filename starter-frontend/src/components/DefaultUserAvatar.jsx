@@ -1,6 +1,6 @@
 /**
  * Generic placeholder avatar (Facebook / Letterboxd–style: circle + silhouette).
- * Pass `size` (px) for fixed dimensions, or omit and size via the parent + `className="w-full h-full"`.
+ * Pass `size` (px) for fixed dimensions, or omit and use a sized parent + `className="w-full h-full"` to fill it.
  */
 export default function DefaultUserAvatar({ className = '', size }) {
   const dims =
@@ -30,4 +30,3 @@ export default function DefaultUserAvatar({ className = '', size }) {
     </svg>
   );
 }
-

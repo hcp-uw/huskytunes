@@ -61,7 +61,7 @@ const rateAlbum = async (albumId, score, review = '', albumData = null) => {
 // Search Spotify (albums only; legacy)
 const searchSpotify = async (query) => {
   try {
-    const response = await axios.get(`${API}/api/spotify/search`, { params: { q: query } });
+    const response = await axios.get(`${API}/api/spotify/search?q=${encodeURIComponent(query)}`);
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Search error details:', error.response?.data || error.message);
@@ -74,6 +74,8 @@ const searchSpotify = async (query) => {
 
 /**
  * Unified search: albums (Spotify + local ratings), artists (Spotify), users (friends).
+ * Uses parallel requests (not /api/search) so results work even if the backend was not restarted
+ * after adding the optional batched route.
  * @param {{ albums?: boolean, artists?: boolean, users?: boolean }} scope — pass false to skip
  */
 const unifiedSearch = async (query, scope = {}) => {
@@ -81,7 +83,6 @@ const unifiedSearch = async (query, scope = {}) => {
   if (!q) {
     return { success: true, data: { albums: [], artists: [], users: [] } };
   }
-
   const wantAlbums = scope.albums !== false;
   const wantArtists = scope.artists !== false;
   const wantUsers = scope.users !== false;
@@ -89,8 +90,12 @@ const unifiedSearch = async (query, scope = {}) => {
   try {
     const qs = new URLSearchParams({ q });
     const settled = await Promise.allSettled([
-      wantAlbums ? axios.get(`${API}/api/spotify/search?${qs.toString()}`) : Promise.resolve({ data: [] }),
-      wantArtists ? axios.get(`${API}/api/spotify/artists/search?${qs.toString()}`) : Promise.resolve({ data: [] }),
+      wantAlbums
+        ? axios.get(`${API}/api/spotify/search?${qs.toString()}`)
+        : Promise.resolve({ data: [] }),
+      wantArtists
+        ? axios.get(`${API}/api/spotify/artists/search?${qs.toString()}`)
+        : Promise.resolve({ data: [] }),
       wantUsers ? searchUsers(q) : Promise.resolve({ success: true, data: [] })
     ]);
 
@@ -101,11 +106,17 @@ const unifiedSearch = async (query, scope = {}) => {
     const albums =
       albumsRes.status === 'fulfilled' && Array.isArray(albumsRes.value.data) ? albumsRes.value.data : [];
     const artists =
-      artistsRes.status === 'fulfilled' && Array.isArray(artistsRes.value.data) ? artistsRes.value.data : [];
-    const users =
-      usersRes.status === 'fulfilled' && usersRes.value.success && Array.isArray(usersRes.value.data)
-        ? usersRes.value.data
+      artistsRes.status === 'fulfilled' && Array.isArray(artistsRes.value.data)
+        ? artistsRes.value.data
         : [];
+    let users = [];
+    if (usersRes.status === 'fulfilled' && usersRes.value.success && Array.isArray(usersRes.value.data)) {
+      users = usersRes.value.data;
+    }
+
+    if (artistsRes.status === 'rejected') {
+      console.warn('Artist search unavailable — restart the backend to enable /api/spotify/artists/search');
+    }
 
     return { success: true, data: { albums, artists, users } };
   } catch (error) {

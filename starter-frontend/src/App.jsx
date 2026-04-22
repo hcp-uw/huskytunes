@@ -46,8 +46,8 @@ const App = () => {
     if (!searchQuery.trim()) return
 
     setActiveSearchQuery(searchQuery.trim())
-    setView('search')
     setSelectedAlbum(null)
+    setView('search')
   }
 
   const handleLoginSuccess = (userData) => {
@@ -131,7 +131,7 @@ const App = () => {
         <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
           <div className="flex gap-6 opacity-60">
             <button onClick={navigateToHome} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">home</button>
-            <button onClick={navigateToProfile} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">profile</button>
+            <a href="#" className="hover:opacity-100 transition-opacity cursor-pointer">profile</a>
           </div>
           {user ? (
             <div className="flex items-center gap-4 pl-6 border-l border-white/20">
@@ -192,7 +192,7 @@ const App = () => {
         <AlbumDetail 
           album={selectedAlbum} 
           user={user} 
-          onBack={() => setView(activeSearchQuery ? 'search' : 'home')} 
+          onBack={() => setView(activeSearchQuery ? 'search' : 'home')}
           backText={activeSearchQuery ? 'back to search' : 'back to community'}
         />
       )}

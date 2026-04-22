@@ -14,7 +14,9 @@ export async function searchUsers(q) {
     return { success: true, data: [] };
   }
   try {
-    const response = await axios.get(`${API}/api/user-search`, { params: { q: query } });
+    const response = await axios.get(`${API}/api/user-search`, {
+      params: { q: query }
+    });
     return { success: true, data: Array.isArray(response.data) ? response.data : [] };
   } catch (error) {
     const status = error.response?.status;
@@ -25,4 +27,3 @@ export async function searchUsers(q) {
     return { success: false, error: msg, data: [] };
   }
 }
-

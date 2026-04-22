@@ -145,6 +145,24 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
   });
 });
 
+// Search users by username (substring, case-insensitive) — requires session
+const handleUserSearch = async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) {
+      return res.json([]);
+    }
+    const users = await searchUsersByUsername(q, req.session.userId);
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+};
+// Two paths: some setups had 404 on /api/users/search; /api/user-search is unambiguous
+app.get('/api/user-search', requireAuth, handleUserSearch);
+app.get('/api/users/search', requireAuth, handleUserSearch);
+
 // Admin endpoint to view all users (for development only - remove in production!)
 app.get('/api/admin/users', async (req, res) => {
   try {
@@ -351,7 +369,37 @@ app.delete('/api/albums/:id/rate', requireAuth, async (req, res) => {
   }
 });
 
-// Spotify search
+/** Merge Spotify album hits with HuskyTunes ratings when the album exists locally. */
+async function enrichSpotifyAlbumsWithLocalData(albums, session) {
+  return Promise.all(
+    albums.map(async (album) => {
+      const localAlbum = await getAlbumById(album.spotifyId);
+      if (localAlbum) {
+        const ratingInfo = await getAlbumAverageRating(localAlbum._id.toString());
+
+        let userRating = null;
+        let review = null;
+        if (session && session.userId) {
+          const ratingDoc = await getUserRating(localAlbum._id.toString(), session.userId);
+          userRating = ratingDoc ? ratingDoc.score : null;
+          review = ratingDoc ? ratingDoc.review : null;
+        }
+
+        return {
+          ...album,
+          _id: localAlbum._id,
+          averageRating: ratingInfo.average,
+          totalRatings: ratingInfo.count,
+          userRating,
+          review
+        };
+      }
+      return album;
+    })
+  );
+}
+
+// Spotify search (albums only; same shape as before — array of albums)
 app.get('/api/spotify/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -359,53 +407,56 @@ app.get('/api/spotify/search', async (req, res) => {
       return res.status(400).json({ error: 'Search query is required' });
     }
     const results = await searchAlbums(q);
-    
-    // For each Spotify result, check if we have local ratings/data
-    const resultsWithLocalData = await Promise.all(
-      results.map(async (album) => {
-        // Try to find the album in our DB by spotifyId
-        const localAlbum = await getAlbumById(album.spotifyId);
-        if (localAlbum) {
-          const ratingInfo = await getAlbumAverageRating(localAlbum._id.toString());
-          
-          let userRating = null;
-          let review = null;
-          if (req.session && req.session.userId) {
-            const ratingDoc = await getUserRating(localAlbum._id.toString(), req.session.userId);
-            userRating = ratingDoc ? ratingDoc.score : null;
-            review = ratingDoc ? ratingDoc.review : null;
-          }
-
-          return {
-            ...album,
-            _id: localAlbum._id,
-            averageRating: ratingInfo.average,
-            totalRatings: ratingInfo.count,
-            userRating: userRating,
-            review: review
-          };
-        }
-        return album;
-      })
-    );
-    
+    const resultsWithLocalData = await enrichSpotifyAlbumsWithLocalData(results, req.session);
     res.json(resultsWithLocalData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Spotify artist search
+// Spotify artist search only (array of artists — used by unified search UI)
 app.get('/api/spotify/artists/search', async (req, res) => {
   try {
     const { q } = req.query;
     if (!q || !String(q).trim()) {
       return res.status(400).json({ error: 'Search query is required' });
     }
-    const results = await searchArtists(String(q).trim());
-    res.json(results);
+    const artists = await searchArtists(String(q).trim());
+    res.json(artists);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Unified search: albums (Spotify + local ratings), artists (Spotify), users (registered members).
+ * Query: q (required). Booleans: albums, artists, users — pass "false" to skip (default: all true).
+ */
+app.get('/api/search', async (req, res) => {
+  try {
+    const raw = (req.query.q || '').trim();
+    if (!raw) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const includeAlbums = req.query.albums !== 'false';
+    const includeArtists = req.query.artists !== 'false';
+    const includeUsers = req.query.users !== 'false';
+
+    const [albums, artists, users] = await Promise.all([
+      includeAlbums
+        ? searchAlbums(raw).then((a) => enrichSpotifyAlbumsWithLocalData(a, req.session))
+        : Promise.resolve([]),
+      includeArtists ? searchArtists(raw) : Promise.resolve([]),
+      includeUsers && req.session && req.session.userId
+        ? searchUsersByUsername(raw, req.session.userId)
+        : Promise.resolve([])
+    ]);
+
+    res.json({ albums, artists, users });
+  } catch (error) {
+    console.error('Unified search error:', error);
+    res.status(500).json({ error: error.message || 'Search failed' });
   }
 });
 

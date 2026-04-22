@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { rateAlbum, getAlbum, deleteRating } from '../services/album';
+import DefaultUserAvatar from './DefaultUserAvatar';
 
 const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to community' }) => {
   const [album, setAlbum] = useState(initialAlbum);
@@ -164,7 +165,7 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
                       </div>
                       {review && review.trim() && (
                         <p className="text-gray-600 text-sm leading-relaxed italic">
-                          "{review}"
+                          {review}
                         </p>
                       )}
                     </div>
@@ -249,8 +250,8 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
                     <div key={i} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-husky-purple rounded-full flex items-center justify-center text-white text-[10px] font-bold">
-                            {r.username.substring(0, 2).toUpperCase()}
+                          <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden">
+                            <DefaultUserAvatar size={32} className="block w-full h-full" />
                           </div>
                           <span className="font-bold text-sm">{r.username} {r.isMine && "(you)"}</span>
                         </div>

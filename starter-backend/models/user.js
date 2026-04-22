@@ -56,7 +56,9 @@ async function searchUsersByUsername(query, excludeUserId) {
     return [];
   }
   const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const filter = { username: { $regex: escaped, $options: 'i' } };
+  const filter = {
+    username: { $regex: escaped, $options: 'i' }
+  };
   if (excludeUserId && ObjectId.isValid(excludeUserId)) {
     filter._id = { $ne: new ObjectId(excludeUserId) };
   }
