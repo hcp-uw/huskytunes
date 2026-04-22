@@ -6,6 +6,8 @@ import SearchResults from './components/SearchResults'
 import { getCurrentUser, logout } from './services/auth'
 import { getAlbums, searchSpotify } from './services/album'
 import './App.css'
+import ProfileView from './components/ProfileView';
+
 
 const App = () => {
   const [user, setUser] = useState(null)
@@ -74,6 +76,12 @@ const App = () => {
     setSearchQuery('')
   }
 
+  const navigateToProfile = () => {
+    setView('profile')
+    setSelectedAlbum(null)
+    setSearchQuery('')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -132,7 +140,7 @@ const App = () => {
           <div className="flex gap-6 opacity-60">
             <button onClick={navigateToHome} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">home</button>
             <a href="#" className="hover:opacity-100 transition-opacity cursor-pointer">friends</a>
-            <a href="#" className="hover:opacity-100 transition-opacity cursor-pointer">profile</a>
+            <button onClick={navigateToProfile} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">profile</button>
           </div>
           {user ? (
             <div className="flex items-center gap-4 pl-6 border-l border-white/20">
@@ -197,6 +205,8 @@ const App = () => {
           backText={searchResults.length > 0 ? 'back to search' : 'back to community'}
         />
       )}
+
+      {view === 'profile' && <ProfileView />}
 
       <footer className="py-12 border-t border-gray-100 text-center text-gray-400 text-sm">
         <p>© 2026 Husky Tunes. All rights reserved.</p>
