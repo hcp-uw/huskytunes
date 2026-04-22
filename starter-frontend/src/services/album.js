@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { searchUsers } from './users'
 
-const baseURL = 'http://localhost:3001/api/albums'
+const API = 'http://localhost:3001'
+const baseURL = `${API}/api/albums`
 
 // Configure axios to send credentials (cookies) with requests
 axios.defaults.withCredentials = true;
@@ -56,16 +58,62 @@ const rateAlbum = async (albumId, score, review = '', albumData = null) => {
   }
 };
 
-// Search Spotify
+// Search Spotify (albums only; legacy)
 const searchSpotify = async (query) => {
   try {
-    const response = await axios.get(`http://localhost:3001/api/spotify/search?q=${query}`);
+    const response = await axios.get(`${API}/api/spotify/search`, { params: { q: query } });
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Search error details:', error.response?.data || error.message);
     return {
       success: false,
       error: error.response?.data?.error || 'Failed to search Spotify'
+    };
+  }
+};
+
+/**
+ * Unified search: albums (Spotify + local ratings), artists (Spotify), users (friends).
+ * @param {{ albums?: boolean, artists?: boolean, users?: boolean }} scope — pass false to skip
+ */
+const unifiedSearch = async (query, scope = {}) => {
+  const q = (query || '').trim();
+  if (!q) {
+    return { success: true, data: { albums: [], artists: [], users: [] } };
+  }
+
+  const wantAlbums = scope.albums !== false;
+  const wantArtists = scope.artists !== false;
+  const wantUsers = scope.users !== false;
+
+  try {
+    const qs = new URLSearchParams({ q });
+    const settled = await Promise.allSettled([
+      wantAlbums ? axios.get(`${API}/api/spotify/search?${qs.toString()}`) : Promise.resolve({ data: [] }),
+      wantArtists ? axios.get(`${API}/api/spotify/artists/search?${qs.toString()}`) : Promise.resolve({ data: [] }),
+      wantUsers ? searchUsers(q) : Promise.resolve({ success: true, data: [] })
+    ]);
+
+    const albumsRes = settled[0];
+    const artistsRes = settled[1];
+    const usersRes = settled[2];
+
+    const albums =
+      albumsRes.status === 'fulfilled' && Array.isArray(albumsRes.value.data) ? albumsRes.value.data : [];
+    const artists =
+      artistsRes.status === 'fulfilled' && Array.isArray(artistsRes.value.data) ? artistsRes.value.data : [];
+    const users =
+      usersRes.status === 'fulfilled' && usersRes.value.success && Array.isArray(usersRes.value.data)
+        ? usersRes.value.data
+        : [];
+
+    return { success: true, data: { albums, artists, users } };
+  } catch (error) {
+    console.error('Unified search error:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Search failed',
+      data: { albums: [], artists: [], users: [] }
     };
   }
 };
@@ -83,4 +131,4 @@ const deleteRating = async (albumId) => {
   }
 };
 
-export { getAlbums, getAlbum, rateAlbum, searchSpotify, deleteRating };
+export { getAlbums, getAlbum, rateAlbum, searchSpotify, unifiedSearch, deleteRating };

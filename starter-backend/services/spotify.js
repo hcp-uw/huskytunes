@@ -70,6 +70,34 @@ const searchAlbums = async (query) => {
   }
 };
 
+const searchArtists = async (query) => {
+  const token = await getSpotifyToken();
+
+  try {
+    const response = await axios.get('https://api.spotify.com/v1/search', {
+      params: {
+        q: query,
+        type: 'artist',
+        limit: 10
+      },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    return response.data.artists.items.map((artist) => ({
+      spotifyId: artist.id,
+      name: artist.name,
+      image: artist.images[0]?.url || null,
+      genres: (artist.genres || []).slice(0, 3),
+      externalUrl: artist.external_urls.spotify
+    }));
+  } catch (error) {
+    console.error('Spotify artist search error:', error.response?.data || error.message);
+    throw new Error('Failed to search artists on Spotify');
+  }
+};
+
 const getAlbumDetails = async (spotifyId) => {
   const token = await getSpotifyToken();
   
@@ -103,5 +131,6 @@ const getAlbumDetails = async (spotifyId) => {
 
 module.exports = {
   searchAlbums,
+  searchArtists,
   getAlbumDetails
 };

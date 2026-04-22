@@ -4,7 +4,7 @@ import Login from './components/Login/Login'
 import AlbumDetail from './components/AlbumDetail'
 import SearchResults from './components/SearchResults'
 import { getCurrentUser, logout } from './services/auth'
-import { getAlbums, searchSpotify } from './services/album'
+import { getAlbums } from './services/album'
 import './App.css'
 import ProfileView from './components/ProfileView';
 
@@ -13,11 +13,9 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [albums, setAlbums] = useState([]) // Featured albums
-  const [searchResults, setSearchResults] = useState([])
   const [showLogin, setShowLogin] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [selectedAlbum, setSelectedAlbum] = useState(null)
   const [view, setView] = useState('home') // 'home', 'search', 'detail'
 
@@ -47,15 +45,9 @@ const App = () => {
     e.preventDefault()
     if (!searchQuery.trim()) return
 
-    setIsSearching(true)
-    const result = await searchSpotify(searchQuery)
-    if (result.success) {
-      setSearchResults(result.data)
-      setActiveSearchQuery(searchQuery)
-      setView('search')
-      setSelectedAlbum(null)
-    }
-    setIsSearching(false)
+    setActiveSearchQuery(searchQuery.trim())
+    setView('search')
+    setSelectedAlbum(null)
   }
 
   const handleLoginSuccess = (userData) => {
@@ -68,12 +60,15 @@ const App = () => {
     setUser(null)
     setView('home')
     setSelectedAlbum(null)
+    setSearchQuery('')
+    setActiveSearchQuery('')
   }
 
   const navigateToHome = () => {
     setView('home')
     setSelectedAlbum(null)
     setSearchQuery('')
+    setActiveSearchQuery('')
   }
 
   const navigateToProfile = () => {
@@ -117,29 +112,25 @@ const App = () => {
           <span className="font-bold tracking-tighter text-lg">HUSKY TUNES</span>
         </div>
 
-        {user && (
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8 relative">
-            <input
-              type="text"
-              placeholder="search albums..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/20 transition-all pr-10"
-            />
-            <button 
-              type="submit"
-              disabled={isSearching}
-              className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-white text-black rounded-full font-bold text-[10px] uppercase hover:bg-opacity-90 transition-all disabled:opacity-50"
-            >
-              {isSearching ? '...' : 'go'}
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8 relative">
+          <input
+            type="text"
+            placeholder="search albums, artists, people…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-1.5 bg-white/10 border border-white/20 rounded-full text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/20 transition-all pr-10"
+          />
+          <button
+            type="submit"
+            className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-white text-black rounded-full font-bold text-[10px] uppercase hover:bg-opacity-90 transition-all"
+          >
+            go
+          </button>
+        </form>
 
         <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
           <div className="flex gap-6 opacity-60">
             <button onClick={navigateToHome} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">home</button>
-            <a href="#" className="hover:opacity-100 transition-opacity cursor-pointer">friends</a>
             <button onClick={navigateToProfile} className="hover:opacity-100 transition-opacity uppercase font-bold cursor-pointer">profile</button>
           </div>
           {user ? (
@@ -186,9 +177,9 @@ const App = () => {
       )}
 
       {view === 'search' && (
-        <SearchResults 
-          albums={searchResults} 
+        <SearchResults
           query={activeSearchQuery}
+          user={user}
           onBack={navigateToHome}
           onAlbumClick={(album) => {
             setSelectedAlbum(album)
@@ -201,8 +192,8 @@ const App = () => {
         <AlbumDetail 
           album={selectedAlbum} 
           user={user} 
-          onBack={() => setView(searchResults.length > 0 ? 'search' : 'home')} 
-          backText={searchResults.length > 0 ? 'back to search' : 'back to community'}
+          onBack={() => setView(activeSearchQuery ? 'search' : 'home')} 
+          backText={activeSearchQuery ? 'back to search' : 'back to community'}
         />
       )}
 

@@ -5,7 +5,7 @@ const MongoStore = require("connect-mongo").default
 const { unknownEndpoint } = require('./middleware');
 const { requireAuth } = require('./middleware/auth');
 const { connect } = require('./db');  // database connection
-const { createUser, findUserByUsername, verifyPassword } = require('./models/user');
+const { createUser, findUserByUsername, verifyPassword, searchUsersByUsername } = require('./models/user');
 const path = require('path');
 const {
   seedSampleAlbum,
@@ -17,7 +17,7 @@ const {
   getUserRating,
   ensureAlbum
 } = require('./models/album');
-const { searchAlbums, getAlbumDetails } = require('./services/spotify');
+const { searchAlbums, searchArtists, getAlbumDetails } = require('./services/spotify');
 // Prefer .env in backend folder; fall back to project root
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -119,6 +119,23 @@ app.post('/api/auth/logout', (req, res) => {
     res.json({ message: 'Logged out successfully' });
   });
 });
+
+// Search users by username (substring, case-insensitive) — requires session
+const handleUserSearch = async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) {
+      return res.json([]);
+    }
+    const users = await searchUsersByUsername(q, req.session.userId);
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+};
+app.get('/api/user-search', requireAuth, handleUserSearch);
+app.get('/api/users/search', requireAuth, handleUserSearch);
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ 
@@ -373,6 +390,20 @@ app.get('/api/spotify/search', async (req, res) => {
     );
     
     res.json(resultsWithLocalData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Spotify artist search
+app.get('/api/spotify/artists/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || !String(q).trim()) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+    const results = await searchArtists(String(q).trim());
+    res.json(results);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
