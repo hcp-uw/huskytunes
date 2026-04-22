@@ -427,15 +427,15 @@ export default function ProfileView() {
               >
                 my profile
               </div>
-              <div style={{ color: "rgba(255,255,255,0.65)", fontFamily: "'Corben', serif", fontWeight: 700, fontSize: 15 }}>
-                @username
+          <div style={{ color: "rgba(255,255,255,0.65)", fontFamily: "'Corben', serif", fontWeight: 700, fontSize: 15 }}>
+                username
               </div>
             </div>
           </div>
 
           {/* Nav */}
           <div style={{ display: "flex", gap: 8, paddingBottom: 28, alignItems: "flex-end" }}>
-            {["home", "find friends", "profile"].map((item) => (
+            {["home", "profile"].map((item) => (
               <button
                 key={item}
                 style={{

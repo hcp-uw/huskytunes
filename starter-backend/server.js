@@ -120,6 +120,23 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// Search users by username (substring, case-insensitive) — requires session
+const handleUserSearch = async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) {
+      return res.json([]);
+    }
+    const users = await searchUsersByUsername(q, req.session.userId);
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+};
+app.get('/api/user-search', requireAuth, handleUserSearch);
+app.get('/api/users/search', requireAuth, handleUserSearch);
+
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ 
     user: { 
