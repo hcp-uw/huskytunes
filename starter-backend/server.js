@@ -145,23 +145,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
   });
 });
 
-// Search users by username (substring, case-insensitive) — requires session
-const handleUserSearch = async (req, res) => {
-  try {
-    const q = (req.query.q || '').trim();
-    if (!q) {
-      return res.json([]);
-    }
-    const users = await searchUsersByUsername(q, req.session.userId);
-    res.json(users);
-  } catch (error) {
-    console.error('Error searching users:', error);
-    res.status(500).json({ error: 'Failed to search users' });
-  }
-};
-// Two paths: some setups had 404 on /api/users/search; /api/user-search is unambiguous
-app.get('/api/user-search', requireAuth, handleUserSearch);
-app.get('/api/users/search', requireAuth, handleUserSearch);
+// (deduped) user search routes are registered above
 
 // Admin endpoint to view all users (for development only - remove in production!)
 app.get('/api/admin/users', async (req, res) => {
