@@ -1,5 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { rateAlbum, getAlbum, deleteRating } from '../services/album';
+import { rateAlbum, getAlbum, deleteRating, getAlbumTracks, rateSong } from '../services/album';
+
+const formatDuration = (ms) => {
+  const total = Math.floor(ms / 1000);
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  return `${min}:${sec.toString().padStart(2, '0')}`;
+};
+
+const StarRating = ({ value, onChange, disabled }) => (
+  <div className="flex gap-0.5">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <button
+        key={star}
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(star)}
+        className={`text-lg transition-all leading-none ${
+          disabled ? 'cursor-default' : 'hover:scale-110 cursor-pointer'
+        } ${star <= value ? 'text-yellow-400' : 'text-gray-200'}`}
+      >
+        ★
+      </button>
+    ))}
+  </div>
+);
 
 const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to community' }) => {
   const [album, setAlbum] = useState(initialAlbum);
@@ -9,6 +34,12 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(!album.userRating);
+  const [tracks, setTracks] = useState([]);
+  const [songRatings, setSongRatings] = useState({});
+  const [avgSongRatings, setAvgSongRatings] = useState({});
+  const [submittingSong, setSubmittingSong] = useState(null);
+  const [tracksLoading, setTracksLoading] = useState(false);
+  const [tracksError, setTracksError] = useState(null);
 
   useEffect(() => {
     const fetchFullDetails = async () => {
@@ -23,6 +54,25 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
     };
     fetchFullDetails();
   }, []);
+
+  useEffect(() => {
+    const spotifyId = album.spotifyId;
+    if (!spotifyId) return;
+  
+    const fetchTracks = async () => {
+      setTracksLoading(true);
+      setTracksError(null);
+      const result = await getAlbumTracks(spotifyId);
+      if (result.success) {
+        setTracks(result.data.tracks || []);
+        setSongRatings(result.data.userSongRatings || {});
+      } else {
+        setTracksError('Could not load tracklist.');
+      }
+      setTracksLoading(false);
+    };
+    fetchTracks();
+  }, [album.spotifyId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,6 +148,23 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
       setError(result.error);
     }
     setIsSubmitting(false);
+  };
+
+  const handleSongRating = async (trackId, score) => {
+    if (!user) return;
+    setSongRatings(prev => ({ ...prev, [trackId]: score }));
+    setSubmittingSong(trackId);
+    const result = await rateSong(album.spotifyId, trackId, score, album);
+    if (result.success) {
+      setAvgSongRatings(prev => ({
+        ...prev,
+        [trackId]: {
+          average: result.data.averageRating,
+          total: result.data.totalRatings
+        }
+      }));
+    }
+    setSubmittingSong(null);
   };
 
   return (
@@ -275,6 +342,54 @@ const AlbumDetail = ({ album: initialAlbum, user, onBack, backText = 'back to co
               </div>
             </div>
           </div>
+        </div>
+        {/* Tracklist */}
+        <div className="mt-20">
+          <h3 className="text-xs uppercase tracking-[0.3em] font-black text-black mb-6">tracklist</h3>
+
+          {tracksLoading && (
+            <p className="text-sm text-gray-400 italic">Loading tracks…</p>
+          )}
+          {tracksError && (
+            <p className="text-sm text-red-400">{tracksError}</p>
+          )}
+
+          {!tracksLoading && !tracksError && tracks.length > 0 && (
+            <div className="divide-y divide-gray-100 rounded-2xl border border-gray-100 overflow-hidden">
+              {tracks.map((track, index) => {
+                const userScore = songRatings[track.id] || 0;
+                const avg = avgSongRatings[track.id];
+                const isSaving = submittingSong === track.id;
+                return (
+                  <div key={track.id} className="flex items-center gap-4 px-6 py-4 bg-white hover:bg-gray-50 transition-colors group">
+                    <span className="text-xs font-bold text-gray-300 w-5 text-right shrink-0">{index + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{track.name}</p>
+                      {track.artists && track.artists.length > 0 && (
+                        <p className="text-xs text-gray-400 truncate">{track.artists.map(a => a.name).join(', ')}</p>
+                      )}
+                    </div>
+                    {user ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StarRating value={userScore} onChange={(score) => handleSongRating(track.id, score)} disabled={isSaving} />
+                        {isSaving && <span className="text-[10px] text-gray-400 uppercase tracking-widest">saving…</span>}
+                        {avg && !isSaving && <span className="text-[10px] text-gray-400 font-bold ml-1">{avg.average}★ ({avg.total})</span>}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-gray-300 uppercase tracking-widest shrink-0">log in to rate</span>
+                    )}
+                    <span className="text-xs text-gray-400 font-mono shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!tracksLoading && !tracksError && tracks.length === 0 && (
+            <div className="bg-gray-50 rounded-2xl p-8 text-center border border-dashed border-gray-200">
+              <p className="text-gray-400 text-sm font-medium italic">No tracks found for this album.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

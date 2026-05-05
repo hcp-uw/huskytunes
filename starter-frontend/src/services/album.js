@@ -56,6 +56,29 @@ const rateAlbum = async (albumId, score, review = '', albumData = null) => {
   }
 };
 
+// Get tracks for an album
+const getAlbumTracks = async (spotifyId) => {
+  try {
+    const response = await axios.get(`http://localhost:3001/api/spotify/albums/${spotifyId}/tracks`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data?.error || 'Failed to fetch tracks' };
+  }
+};
+
+// Rate a song (1-5 stars)
+const rateSong = async (albumSpotifyId, trackId, score, albumData) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:3001/api/spotify/albums/${albumSpotifyId}/tracks/${trackId}/rate`,
+      { score, albumData }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.response?.data?.error || 'Failed to rate song' };
+  }
+};
+
 // Search Spotify
 const searchSpotify = async (query) => {
   try {
@@ -83,4 +106,4 @@ const deleteRating = async (albumId) => {
   }
 };
 
-export { getAlbums, getAlbum, rateAlbum, searchSpotify, deleteRating };
+export { getAlbums, getAlbum, rateAlbum, searchSpotify, deleteRating, getAlbumTracks, rateSong };
