@@ -1,3 +1,27 @@
+# HuskyTunes 🐶🎵
+HuskyTunes is an album and track rating app that uses the React.js and the Spotify API. Users can create profiles, browse and review albums and tracks, display their music tastes, and share it towards their friends.
+
+## Features ⭐
+- Browsing: Search up albums, artists, and people through the search bar
+- Reviewing: Type reviews and leave rating towards specific albums, then individually ranking tracks as well
+- Profile: Create and share a profile showcasing your top songs, albums, and artists for the world to see
+- Friending: Friend and follow other HuskyTune users to keep up with their music tastes and preferences
+
+## Tech Stack 🌐
+- Frontend: React.js
+- Backend: Node.js, MongoDB
+- API: Spotify API
+
+
+
+
+
+
+
+
+
+
+
 # Node.js (React, Express) Project Starter ✅
 
 A simple template repository with a React frontend and Express backend for quickly starting new full-stack projects.
@@ -54,5 +78,5 @@ npm start
 
 ### Contributing 🤝
 
-If you have any feedback feel free to submit an issue/pull request! Contributions are more than welcome.
+If you have any feedback feel free to submit an issue/pull request! Contributions are more than welcome. -->
 
